@@ -4,6 +4,21 @@ import { Strategy } from 'passport-kakao';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../users/users.service';
 
+interface KakaoProfile {
+  id: string;
+  _json: {
+    kakao_account: {
+      email?: string;
+      profile?: {
+        nickname?: string;
+        profile_image_url?: string;
+      };
+    };
+  };
+}
+
+type DoneCallback = (error: Error | null, user?: any) => void;
+
 @Injectable()
 export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
   constructor(
@@ -28,20 +43,21 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
-    done: any,
+    profile: KakaoProfile,
+    done: DoneCallback,
   ) {
     const { _json } = profile;
+    const kakao_account = _json.kakao_account || {};
+    const profileData = kakao_account.profile || {};
 
     const userDetails = {
-      email: _json.kakao_account.email || `${profile.id}@kakao.com`,
-      firstName: _json.kakao_account.profile.nickname || '',
+      email: kakao_account.email || `${profile.id}@kakao.com`,
+      firstName: profileData.nickname || '',
       lastName: '',
-      picture: _json.kakao_account.profile.profile_image_url || '',
+      picture: profileData.profile_image_url || '',
       kakaoId: profile.id,
       provider: 'kakao',
     };
-
     const user = await this.userService.findOrCreateUserByOAuth(userDetails);
 
     done(null, user);
