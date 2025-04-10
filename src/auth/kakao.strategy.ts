@@ -1,0 +1,49 @@
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { Strategy } from 'passport-kakao';
+import { ConfigService } from '@nestjs/config';
+import { UserService } from '../users/users.service';
+
+@Injectable()
+export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
+  constructor(
+    private configService: ConfigService,
+    private userService: UserService,
+  ) {
+    const clientID = configService.get<string>('KAKAO_CLIENT_ID');
+    const clientSecret = configService.get<string>('KAKAO_CLIENT_SECRET');
+    const callbackURL = configService.get<string>('KAKAO_CALLBACK_URL');
+
+    if (!clientID || !clientSecret || !callbackURL) {
+      throw new Error('kakao OAuth 설정에 필요한 환경 변수가 누락되었습니다.');
+    }
+
+    super({
+      clientID,
+      clientSecret,
+      callbackURL,
+    });
+  }
+
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: any,
+    done: any,
+  ) {
+    const { _json } = profile;
+
+    const userDetails = {
+      email: _json.kakao_account.email || `${profile.id}@kakao.com`,
+      firstName: _json.kakao_account.profile.nickname || '',
+      lastName: '',
+      picture: _json.kakao_account.profile.profile_image_url || '',
+      kakaoId: profile.id,
+      provider: 'kakao',
+    };
+
+    const user = await this.userService.findOrCreateUserByOAuth(userDetails);
+
+    done(null, user);
+  }
+}
