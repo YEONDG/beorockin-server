@@ -15,11 +15,11 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  findOne(id: number): Promise<User> {
+  findOne(id: number): Promise<User | null> {
     return this.usersRepository.findOneBy({ id });
   }
 
-  findByEmail(email: string): Promise<User> {
+  findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ email });
   }
 

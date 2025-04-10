@@ -25,7 +25,10 @@ import { UsersModule } from './users/users.module';
         database: configService.get('DB_DATABASE', 'nest_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'], // 엔티티 자동 로드
         synchronize: configService.get<boolean>('DB_SYNC', false), // 개발 시에만 true 권장
+        autoLoadEntities: true,
         logging: configService.get<boolean>('DB_LOGGING', false),
+        charset: 'utf8mb4',
+        timezone: '+09:00', // 한국 시간대
       }),
     }),
 
