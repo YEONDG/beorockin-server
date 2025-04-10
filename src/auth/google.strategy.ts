@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, VerifyCallback } from 'passport-google-oauth20';
+import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from 'src/users/users.service';
 
@@ -29,15 +29,21 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: any,
+    profile: Profile,
     done: VerifyCallback,
   ): Promise<any> {
     const { name, emails, photos } = profile;
+    // 필수 필드가 없는 경우 기본값 제공
+    const email = emails?.[0]?.value || '';
+    const firstName = name?.givenName || '';
+    const lastName = name?.familyName || '';
+    const picture = photos?.[0]?.value || '';
+
     const userDetails = {
-      email: emails[0].value,
-      firstName: name.givenName,
-      lastName: name.familyName,
-      picture: photos[0].value,
+      email,
+      firstName,
+      lastName,
+      picture,
       googleId: profile.id,
       provider: 'google',
     };
