@@ -6,6 +6,12 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { TokenExpiredError } from 'jsonwebtoken';
 
+interface RequestWithCookies extends Request {
+  cookies?: {
+    [key: string]: string;
+  };
+}
+
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor() {
@@ -13,14 +19,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const accessToken = request.cookies?.access_token;
+    const request = context.switchToHttp().getRequest<RequestWithCookies>();
+    const accessToken = request.cookies?.['access_token'];
 
     console.log('JWT Guard - Access token exists:', !!accessToken);
 
     // 액세스 토큰이 없는 경우 바로 에러
     if (!accessToken) {
-      const refreshToken = request.cookies?.refresh_token;
+      const refreshToken = request.cookies?.['refresh_token'];
 
       if (refreshToken) {
         // 액세스 토큰은 없지만 리프레시 토큰이 있는 경우
@@ -34,9 +40,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     // 액세스 토큰이 있는 경우 기본 검증 과정 진행
     try {
       return (await super.canActivate(context)) as boolean;
-    } catch (error) {
+    } catch (error: unknown) {
       // 토큰 만료 오류인 경우
-      if (error.cause instanceof TokenExpiredError) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'cause' in error &&
+        error.cause instanceof TokenExpiredError
+      ) {
         throw new UnauthorizedException('액세스 토큰이 만료되었습니다');
       }
 
@@ -45,10 +56,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
   }
 
-  handleRequest(err, user, info) {
+  handleRequest<TUser = any>(err: any, user: any, info: any): TUser {
     console.log('JWT Guard - Handle request:', {
       error: !!err,
       hasUser: !!user,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       infoType: info ? info.constructor.name : 'none',
     });
 
@@ -62,6 +74,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw err || new UnauthorizedException('인증에 실패했습니다');
     }
 
-    return user;
+    return user as TUser;
   }
 }
