@@ -19,6 +19,7 @@ export class UsersController {
 
   @Post()
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    console.log('왔는가?');
     return this.usersService.create(createUserDto);
   }
 
