@@ -1,30 +1,55 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  UseGuards,
+  Put,
+  Body,
+  Delete,
+} from '@nestjs/common';
+import { UserService } from './users.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger';
+import { UpdateUserDto } from './dto/update-user.dto';
 
-@Controller('users')
-export class UsersController {
-  constructor(private usersService: UsersService) {}
+@ApiTags('users')
+@Controller('user')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
 
-  @Get()
-  findAll(): Promise<User[]> {
-    return this.usersService.findAll();
-  }
-
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<User | null> {
-    return this.usersService.findOne(+id);
+  @ApiCookieAuth('access_token')
+  @ApiOperation({ summary: '특정 사용자 조회' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.findOne(id);
   }
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    console.log('왔는가?');
-    return this.usersService.create(createUserDto);
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  @ApiCookieAuth('access_token')
+  @ApiOperation({ summary: '사용자 목록 조회' })
+  findAll() {
+    return this.userService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  @ApiCookieAuth('access_token')
+  @ApiOperation({ summary: '사용자 정보 수정' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.update(id, updateUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<void> {
-    return this.usersService.remove(+id);
+  @ApiCookieAuth('access_token')
+  @ApiOperation({ summary: '사용자 삭제' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.remove(id);
   }
 }
