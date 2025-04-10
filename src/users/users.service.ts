@@ -148,6 +148,7 @@ export class UserService {
       // 사용자가 있으면 OAuth 정보 업데이트
       if (userDetails.googleId) user.googleId = userDetails.googleId;
       if (userDetails.kakaoId) user.kakaoId = userDetails.kakaoId;
+
       user.profileImage = userDetails.picture || user.profileImage;
       user.firstName = user.firstName || userDetails.firstName;
       user.lastName = user.lastName || userDetails.lastName;
@@ -164,7 +165,7 @@ export class UserService {
       name:
         `${userDetails.firstName} ${userDetails.lastName}`.trim() ||
         userDetails.email.split('@')[0],
-      password: null,
+      password: undefined,
       profileImage: userDetails.picture,
       googleId: userDetails.googleId,
       kakaoId: userDetails.kakaoId,
