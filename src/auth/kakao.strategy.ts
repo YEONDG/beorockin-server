@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-kakao';
 import { ConfigService } from '@nestjs/config';
-import { UserService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 
 interface KakaoProfile {
   id: string;
@@ -23,7 +23,7 @@ type DoneCallback = (error: Error | null, user?: any) => void;
 export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
   constructor(
     private configService: ConfigService,
-    private userService: UserService,
+    private userService: UsersService,
   ) {
     const clientID = configService.get<string>('KAKAO_CLIENT_ID');
     const clientSecret = configService.get<string>('KAKAO_CLIENT_SECRET');

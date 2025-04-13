@@ -14,7 +14,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { LoginUserDto } from '../users/dto/login-user.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { UserService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -23,7 +23,7 @@ import { AuthGuard } from '@nestjs/passport';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UserService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Post('register')
@@ -32,13 +32,14 @@ export class AuthController {
     @Body() createUserDto: CreateUserDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const user = await this.userService.register(createUserDto);
+    const user = await this.usersService.register(createUserDto);
     await this.authService.setTokenCookie(response, user.id);
+    console.log(user, '유저뭐예요');
 
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
+      username: user.username,
     };
   }
 
@@ -48,7 +49,7 @@ export class AuthController {
     @Body() loginUserDto: LoginUserDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const user = await this.userService.validateUser(
+    const user = await this.usersService.validateUser(
       loginUserDto.email,
       loginUserDto.password,
     );
@@ -58,7 +59,7 @@ export class AuthController {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
+      username: user.username,
     };
   }
 
@@ -122,8 +123,10 @@ export class AuthController {
   @ApiOperation({ summary: '내 프로필 조회' })
   async getProfile(@RequestDecorator() req: { user: { userId: number } }) {
     const userId = req.user.userId;
+
+    console.log(userId, '이거 너냐?');
     // UserService를 통해 전체 사용자 정보 조회
-    const fullUserProfile = await this.userService.findOne(userId);
+    const fullUserProfile = await this.usersService.findOne(userId);
 
     return fullUserProfile;
   }

@@ -37,7 +37,7 @@ export class User {
     description: '사용자 이름',
   })
   @Column()
-  name: string;
+  username: string;
 
   @ApiProperty({
     example: 'https://example.com/profile.jpg',

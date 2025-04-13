@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
-import { UserService } from 'src/users/users.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
     private configService: ConfigService,
-    private userService: UserService,
+    private usersService: UsersService,
   ) {
     const clientID = configService.get<string>('GOOGLE_CLIENT_ID');
     const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET');
@@ -48,7 +48,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       provider: 'google',
     };
 
-    const user = await this.userService.findOrCreateUserByOAuth(userDetails);
+    const user = await this.usersService.findOrCreateUserByOAuth(userDetails);
     done(null, user);
   }
 }

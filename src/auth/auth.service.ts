@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -23,19 +23,33 @@ interface RequestWithUser extends Request {
 @Injectable()
 export class AuthService {
   // 리프레시 토큰 만료 시간 (7일)
-  private readonly REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 7; // 초 단위
+  // private readonly REFRESH_TOKEN_EXPIRES_IN = 60 * 60 * 24 * 7; // 초 단위
   // 액세스 토큰 만료 시간 (1시간)
-  private readonly ACCESS_TOKEN_EXPIRES_IN = '1h';
+  // private readonly ACCESS_TOKEN_EXPIRES_IN = '1h';
+
+  private readonly REFRESH_TOKEN_EXPIRES_IN: number;
+  private readonly ACCESS_TOKEN_EXPIRES_IN: string;
+  private readonly ACCESS_TOKEN_EXPIRES_IN_SECONDS: number;
 
   constructor(
-    private userService: UserService,
+    private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
     @InjectRepository(User) // 이 부분 추가
     private userRepository: Repository<User>,
-  ) {}
+  ) {
+    this.ACCESS_TOKEN_EXPIRES_IN = this.configService.get(
+      'ACCESS_TOKEN_EXPIRES_IN',
+      '60m',
+    );
+    this.ACCESS_TOKEN_EXPIRES_IN_SECONDS = 60 * 60; // 1시간 (초)
+    this.REFRESH_TOKEN_EXPIRES_IN = this.configService.get(
+      'REFRESH_TOKEN_EXPIRES_IN',
+      60 * 60 * 24 * 7,
+    ); // 7일 (초)
+  }
 
   async generateToken(userId: number) {
     const payload = { sub: userId };
@@ -86,7 +100,9 @@ export class AuthService {
 
     // 액세스 토큰 쿠키 설정
     const accessExpiration = new Date();
-    accessExpiration.setTime(accessExpiration.getTime() + 60 * 60 * 1000); // 60분
+    accessExpiration.setTime(
+      accessExpiration.getTime() + this.ACCESS_TOKEN_EXPIRES_IN_SECONDS * 1000,
+    ); // 60분
 
     response.cookie('access_token', tokens.access_token, {
       httpOnly: true,
@@ -134,7 +150,9 @@ export class AuthService {
 
     // 쿠키에 새 액세스 토큰 설정
     const accessExpiration = new Date();
-    accessExpiration.setTime(accessExpiration.getTime() + 60 * 60 * 1000); // 60분
+    accessExpiration.setTime(
+      accessExpiration.getTime() + this.ACCESS_TOKEN_EXPIRES_IN_SECONDS * 1000,
+    ); // 60분
     const sameSiteOption =
       this.configService.get('NODE_ENV') === 'production' ? 'strict' : 'lax';
     response.cookie('access_token', accessToken, {
@@ -161,7 +179,7 @@ export class AuthService {
 
     // 프론트엔드로 리디렉션
     return res.redirect(
-      `${this.configService.get('FRONTEND_URL')}/auth/success`,
+      `${this.configService.get('FRONTEND_URL')}/auth/${provider}success`,
     );
   }
 

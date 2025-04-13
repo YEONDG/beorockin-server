@@ -28,7 +28,7 @@ export class CreateUserDto {
   })
   @IsString({ message: '이름을 입력해주세요' })
   @IsNotEmpty({ message: '이름을 입력해주세요' })
-  name: string;
+  username: string;
 
   profileImage?: string;
 }
