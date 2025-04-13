@@ -6,14 +6,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 // import { JwtService } from '@nestjs/jwt';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
-export class UserService {
+export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -23,7 +23,7 @@ export class UserService {
   async register(
     createUserDto: CreateUserDto,
   ): Promise<Omit<User, 'password'>> {
-    const { email, password, name, profileImage } = createUserDto;
+    const { email, password, username, profileImage } = createUserDto;
 
     // 이미 존재하는 사용자인지 확인
     const existingUser = await this.userRepository.findOne({
@@ -40,7 +40,7 @@ export class UserService {
     const user = this.userRepository.create({
       email,
       password: hashedPassword,
-      name,
+      username,
       profileImage,
     });
 
@@ -66,7 +66,14 @@ export class UserService {
   // findAll 메서드 - 모든 사용자 목록 조회
   async findAll() {
     const users = await this.userRepository.find({
-      select: ['id', 'email', 'name', 'profileImage', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'username',
+        'profileImage',
+        'createdAt',
+        'updatedAt',
+      ],
     });
     return users;
   }
@@ -90,7 +97,14 @@ export class UserService {
     // 업데이트된 사용자 정보 반환 (비밀번호 제외)
     const updatedUser = await this.userRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'name', 'profileImage', 'createdAt', 'updatedAt'],
+      select: [
+        'id',
+        'email',
+        'username',
+        'profileImage',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
     return updatedUser;
@@ -162,7 +176,7 @@ export class UserService {
       email: userDetails.email,
       firstName: userDetails.firstName,
       lastName: userDetails.lastName,
-      name:
+      username:
         `${userDetails.firstName} ${userDetails.lastName}`.trim() ||
         userDetails.email.split('@')[0],
       password: undefined,
