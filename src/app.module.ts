@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
     // 환경 변수 로드
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
 
     // TypeORM 설정
