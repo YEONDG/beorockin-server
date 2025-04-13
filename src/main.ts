@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,8 +10,6 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:3000', 'https://your-frontend-domain.com'], // 프론트엔드 도메인
     credentials: true, // 쿠키 포함 요청 허용 (withCredentials: true 대응)
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   app.use(cookieParser());
