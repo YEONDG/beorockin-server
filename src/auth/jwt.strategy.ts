@@ -45,12 +45,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   validate(payload: JwtPayload) {
     console.log(payload, '페이로드확인');
-    if (!payload.sub || !payload.username) {
+    if (!payload.sub) {
       throw new Error('JWT 페이로드에 필요한 정보가 누락되었습니다.');
     }
     const userData: UserData = {
       userId: payload.sub,
-      username: payload.username,
+      username: payload.username || '',
     };
 
     return userData;
