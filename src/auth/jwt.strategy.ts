@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 
 // JWT 페이로드 타입 정의
-interface JwtPayload {
+export interface JwtPayload {
   sub: string;
   username: string;
   iat?: number;
