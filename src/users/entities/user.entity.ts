@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
+import { QuizSet } from '../../quiz/entities/quiz-set.entity';
 
 @Entity()
 export class User {
@@ -62,9 +63,13 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // 리프레시 토큰과의 관계 추가
+  // 리프레시 토큰과의 관계
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
+
+  // 퀴즈 세트와의 관계 추가
+  @OneToMany(() => QuizSet, (quizSet) => quizSet.user)
+  quizSets: QuizSet[];
 
   // 구글 OAuth 관련 필드 추가
   @ApiProperty({
