@@ -10,17 +10,19 @@ import {
   HttpException,
   UseGuards,
   Request,
+  UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { CreateQuizSetDto } from './dto/create-quiz-set.dto';
 import { QuizService } from './quiz.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { JwtPayload } from 'src/auth/jwt.strategy';
+import { UserData } from 'src/auth/jwt.strategy';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QuizSet } from './entities/quiz-set.entity';
 
 interface RequestWithUser extends Request {
-  user: JwtPayload;
+  user: UserData;
 }
 
 @Controller('quiz')
@@ -44,7 +46,26 @@ export class QuizController {
     @Request() req: RequestWithUser,
   ) {
     try {
-      const userId = Number(req.user.sub);
+      const userSub = req.user?.userId;
+
+      if (userSub === undefined || userSub === null || userSub === '') {
+        // sub 값이 없거나 비어있는 경우 - 인증 문제일 수 있음
+        throw new UnauthorizedException(
+          '유효한 사용자 ID를 토큰에서 찾을 수 없습니다.',
+        );
+      }
+
+      // parseInt를 사용하고, 10진수 변환 명시, 결과가 NaN인지 확인
+      const userId = parseInt(String(userSub), 10);
+
+      if (isNaN(userId)) {
+        // sub 값이 숫자로 변환되지 않는 경우
+        console.error(
+          `[createQuizSet] Invalid user ID format in token sub: ${userSub}`,
+        ); // 로그 남기기
+        throw new BadRequestException('사용자 ID 형식이 올바르지 않습니다.');
+        // 또는 보안상 UnauthorizedException을 던질 수도 있음
+      }
 
       return await this.quizService.createQuizSet(createQuizSetDto, userId);
     } catch (error) {
@@ -81,7 +102,27 @@ export class QuizController {
     @Request() req: RequestWithUser,
   ) {
     try {
-      const userId = Number(req.user.sub);
+      const userSub = req.user?.userId;
+
+      if (userSub === undefined || userSub === null || userSub === '') {
+        // sub 값이 없거나 비어있는 경우 - 인증 문제일 수 있음
+        throw new UnauthorizedException(
+          '유효한 사용자 ID를 토큰에서 찾을 수 없습니다.',
+        );
+      }
+
+      // parseInt를 사용하고, 10진수 변환 명시, 결과가 NaN인지 확인
+      const userId = parseInt(String(userSub), 10);
+
+      if (isNaN(userId)) {
+        // sub 값이 숫자로 변환되지 않는 경우
+        console.error(
+          `[createQuizSet] Invalid user ID format in token sub: ${userSub}`,
+        ); // 로그 남기기
+        throw new BadRequestException('사용자 ID 형식이 올바르지 않습니다.');
+        // 또는 보안상 UnauthorizedException을 던질 수도 있음
+      }
+
       return await this.quizService.updateQuizSet(id, updateQuizSetDto, userId);
     } catch {
       throw new HttpException(
