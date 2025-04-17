@@ -34,7 +34,6 @@ export class AuthController {
   ) {
     const user = await this.usersService.register(createUserDto);
     await this.authService.setTokenCookie(response, user.id);
-    console.log(user, '유저뭐예요');
 
     return {
       id: user.id,
@@ -95,20 +94,17 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const refreshToken = req.cookies?.refresh_token as string | undefined;
+
     if (!refreshToken) {
       throw new UnauthorizedException('리프레시 토큰이 없습니다');
     }
-
     return this.authService.refreshAccessToken(refreshToken, response);
   }
 
   // 구글 로그인 시작
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() {
-    // 이 함수는 구글 인증 페이지로 리디렉션하는 용도로만 사용
-    // 실제 구현 내용은 필요 없음
-  }
+  googleAuth() {}
 
   // 구글 로그인 콜백
   @Get('google/callback')
@@ -124,7 +120,6 @@ export class AuthController {
   async getProfile(@RequestDecorator() req: { user: { userId: number } }) {
     const userId = req.user.userId;
 
-    console.log(userId, '이거 너냐?');
     // UserService를 통해 전체 사용자 정보 조회
     const fullUserProfile = await this.usersService.findOne(userId);
 

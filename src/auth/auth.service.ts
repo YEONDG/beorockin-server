@@ -102,7 +102,7 @@ export class AuthService {
     const accessExpiration = new Date();
     accessExpiration.setTime(
       accessExpiration.getTime() + this.ACCESS_TOKEN_EXPIRES_IN_SECONDS * 1000,
-    ); // 60분
+    );
 
     response.cookie('access_token', tokens.access_token, {
       httpOnly: true,
