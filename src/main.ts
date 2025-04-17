@@ -20,6 +20,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('users', '사용자 관리 API')
     .addTag('auth', '인증 관련 API')
+    .addTag('Quiz', '퀴즈 관련 API')
     .addBearerAuth(
       // 인증 방식 추가
       {

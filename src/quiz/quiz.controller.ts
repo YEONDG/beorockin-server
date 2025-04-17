@@ -16,6 +16,8 @@ import { CreateQuizSetDto } from './dto/create-quiz-set.dto';
 import { QuizService } from './quiz.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { JwtPayload } from 'src/auth/jwt.strategy';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { QuizSet } from './entities/quiz-set.entity';
 
 interface RequestWithUser extends Request {
   user: JwtPayload;
@@ -26,6 +28,16 @@ export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Post('sets')
+  @ApiOperation({
+    summary: '퀴즈 세트 생성',
+    description: '새로운 퀴즈 세트를 생성합니다.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '퀴즈 세트 생성 성공',
+    type: QuizSet,
+  })
+  @ApiResponse({ status: 400, description: '잘못된 요청' })
   @UseGuards(JwtAuthGuard)
   async createQuizSet(
     @Body() createQuizSetDto: CreateQuizSetDto,
