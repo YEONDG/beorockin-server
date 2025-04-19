@@ -17,6 +17,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { UserStatsService } from 'src/user-stats/user-stats.service';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -24,6 +25,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
+    private userStatsService: UserStatsService,
   ) {}
 
   @Post('register')
@@ -52,6 +54,8 @@ export class AuthController {
       loginUserDto.email,
       loginUserDto.password,
     );
+
+    await this.userStatsService.updateStreakDays(user.id);
 
     await this.authService.setTokenCookie(response, user.id);
 
@@ -101,18 +105,6 @@ export class AuthController {
     return this.authService.refreshAccessToken(refreshToken, response);
   }
 
-  // 구글 로그인 시작
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  googleAuth() {}
-
-  // 구글 로그인 콜백
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleAuthCallback(@Req() req, @Res() res: Response) {
-    return this.authService.googleLogin(req, res);
-  }
-
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiCookieAuth('access_token')
@@ -124,6 +116,18 @@ export class AuthController {
     const fullUserProfile = await this.usersService.findOne(userId);
 
     return fullUserProfile;
+  }
+
+  // 구글 로그인 시작
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleAuth() {}
+
+  // 구글 로그인 콜백
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleAuthCallback(@Req() req, @Res() res: Response) {
+    return this.authService.googleLogin(req, res);
   }
 
   // 카카오 로그인 시작
