@@ -22,6 +22,9 @@ export class UserStats {
   @Column({ default: 0 })
   completedQuizzes: number;
 
+  @Column({ default: 0 })
+  inProgressQuizSets: number;
+
   @Column({ name: 'last_study_date', type: 'timestamp', nullable: true })
   lastStudyDate: Date | null;
 

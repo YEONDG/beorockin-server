@@ -4,10 +4,11 @@ import { UserStatsController } from './user-stats.controller';
 import { UserStatsService } from './user-stats.service';
 import { UserStats } from './entities/user-stats.entity';
 import { UsersModule } from '../users/users.module';
+import { UserQuizProgress } from './entities/user-quiz-progress.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserStats]),
+    TypeOrmModule.forFeature([UserStats, UserQuizProgress]),
     UsersModule, // User 엔티티에 접근하기 위해 UsersModule 가져오기
   ],
   controllers: [UserStatsController],

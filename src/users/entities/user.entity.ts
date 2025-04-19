@@ -9,6 +9,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 import { QuizSet } from '../../quiz/entities/quiz-set.entity';
+import { UserQuizProgress } from 'src/user-stats/entities/user-quiz-progress.entity';
 
 @Entity()
 export class User {
@@ -134,4 +135,7 @@ export class User {
   })
   @Column({ nullable: true })
   lastName: string;
+
+  @OneToMany(() => UserQuizProgress, (progress) => progress.user)
+  quizProgresses: UserQuizProgress[];
 }

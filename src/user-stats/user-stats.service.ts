@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserStats } from './entities/user-stats.entity';
 import { UsersService } from '../users/users.service';
+import { UserQuizProgress } from './entities/user-quiz-progress.entity';
 
 @Injectable()
 export class UserStatsService {
   constructor(
     @InjectRepository(UserStats)
     private userStatsRepository: Repository<UserStats>,
+    @InjectRepository(UserQuizProgress)
+    private userQuizProgressRepository: Repository<UserQuizProgress>,
     private usersService: UsersService,
   ) {}
 
@@ -116,5 +119,115 @@ export class UserStatsService {
     userStats.updatedAt = new Date();
 
     return this.userStatsRepository.save(userStats);
+  }
+
+  // 사용자가 공부 중인 문제집 조회
+  async getInProgressQuizSets(userId: number) {
+    return this.userQuizProgressRepository.find({
+      where: {
+        user: { id: userId },
+        status: 'in_progress',
+      },
+      order: {
+        startedAt: 'DESC', // 최근에 시작한 문제집 순으로 정렬
+      },
+    });
+  }
+
+  async getAllQuizProgress(userId: number) {
+    return this.userQuizProgressRepository.find({
+      where: {
+        user: { id: userId },
+      },
+      order: {
+        startedAt: 'DESC', // 최근에 시작한 퀴즈 순서로 정렬
+      },
+    });
+  }
+
+  // 새 문제집 학습 시작 기록
+  async startQuizSet(userId: number, quizSetId: number, quizSetName: string) {
+    // 이미 학습 중인지 확인
+    const existingProgress = await this.userQuizProgressRepository.findOne({
+      where: {
+        user: { id: userId },
+        quizSetId: quizSetId,
+      },
+    });
+
+    if (existingProgress) {
+      // 이미 존재하면 학습 중 상태로 업데이트
+      existingProgress.status = 'in_progress';
+      return this.userQuizProgressRepository.save(existingProgress);
+    }
+
+    // 새 학습 기록 생성
+    const newProgress = this.userQuizProgressRepository.create({
+      user: { id: userId },
+      quizSetId: quizSetId,
+      quizSetName: quizSetName,
+      status: 'in_progress',
+    });
+
+    await this.userQuizProgressRepository.save(newProgress);
+
+    // 사용자 통계 업데이트
+    const userStats = await this.findByUserId(userId);
+    userStats.inProgressQuizSets += 1;
+    await this.userStatsRepository.save(userStats);
+
+    return newProgress;
+  }
+
+  // 문제집 학습 완료 처리
+  async completeQuizSet(userId: number, quizSetId: number) {
+    const progress = await this.userQuizProgressRepository.findOne({
+      where: {
+        user: { id: userId },
+        quizSetId: quizSetId,
+      },
+    });
+
+    if (!progress) {
+      throw new NotFoundException('해당 학습 기록을 찾을 수 없습니다.');
+    }
+
+    progress.status = 'completed';
+    progress.completedAt = new Date();
+    await this.userQuizProgressRepository.save(progress);
+
+    // 사용자 통계 업데이트
+    const userStats = await this.findByUserId(userId);
+    userStats.inProgressQuizSets -= 1;
+    userStats.completedQuizzes += 1;
+    await this.userStatsRepository.save(userStats);
+
+    return progress;
+  }
+
+  // 문제집 학습 기록 삭제
+  async removeQuizProgress(userId: number, quizSetId: number) {
+    const progress = await this.userQuizProgressRepository.findOne({
+      where: {
+        user: { id: userId },
+        quizSetId: quizSetId,
+      },
+    });
+
+    if (!progress) {
+      throw new NotFoundException('해당 학습 기록을 찾을 수 없습니다.');
+    }
+
+    // 진행 중이었다면 통계에서 카운트 감소
+    if (progress.status === 'in_progress') {
+      const userStats = await this.findByUserId(userId);
+      userStats.inProgressQuizSets = Math.max(
+        0,
+        userStats.inProgressQuizSets - 1,
+      );
+      await this.userStatsRepository.save(userStats);
+    }
+
+    return this.userQuizProgressRepository.remove(progress);
   }
 }
