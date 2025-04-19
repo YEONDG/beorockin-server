@@ -12,6 +12,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
+import { UserStatsService } from 'src/user-stats/user-stats.service';
 
 interface RequestWithUser extends Request {
   user?: {
@@ -39,6 +40,7 @@ export class AuthService {
     private refreshTokenRepository: Repository<RefreshToken>,
     @InjectRepository(User) // 이 부분 추가
     private userRepository: Repository<User>,
+    private userStatsService: UserStatsService,
   ) {
     this.ACCESS_TOKEN_EXPIRES_IN = this.configService.get(
       'ACCESS_TOKEN_EXPIRES_IN',
@@ -175,6 +177,15 @@ export class AuthService {
     }
 
     const userId = req.user.id;
+
+    // 연속 학습일 업데이트 추가
+    try {
+      await this.userStatsService.updateStreakDays(userId);
+    } catch (error) {
+      console.error(`Failed to update streak days for user ${userId}:`, error);
+      // 사용자 통계 업데이트 실패해도 로그인 프로세스는 계속 진행
+    }
+
     await this.setTokenCookie(res, userId);
 
     // 프론트엔드로 리디렉션
