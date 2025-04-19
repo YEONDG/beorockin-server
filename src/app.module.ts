@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { QuizModule } from './quiz/quiz.module';
+import { UserStatsModule } from './user-stats/user-stats.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { QuizModule } from './quiz/quiz.module';
     UsersModule,
     AuthModule,
     QuizModule,
+    UserStatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
