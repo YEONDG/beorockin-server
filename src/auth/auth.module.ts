@@ -11,10 +11,12 @@ import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './google.strategy';
 import { KakaoStrategy } from './kakao.strategy';
 import { User } from 'src/users/entities/user.entity';
+import { UserStatsModule } from 'src/user-stats/user-stats.module';
 
 @Module({
   imports: [
     UsersModule,
+    UserStatsModule,
     PassportModule,
     TypeOrmModule.forFeature([RefreshToken, User]), // RefreshToken, User 엔티티 등록
     JwtModule.registerAsync({
