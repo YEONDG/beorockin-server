@@ -12,6 +12,7 @@ import {
   Request,
   UnauthorizedException,
   BadRequestException,
+  ParseIntPipe,
 } from '@nestjs/common';
 
 import { CreateQuizSetDto } from './dto/create-quiz-set.dto';
@@ -20,6 +21,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UserData } from 'src/auth/jwt.strategy';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QuizSet } from './entities/quiz-set.entity';
+import { UserStatsService } from 'src/user-stats/user-stats.service';
 
 interface RequestWithUser extends Request {
   user: UserData;
@@ -27,7 +29,10 @@ interface RequestWithUser extends Request {
 
 @Controller('quiz')
 export class QuizController {
-  constructor(private readonly quizService: QuizService) {}
+  constructor(
+    private readonly quizService: QuizService,
+    private readonly userStatsService: UserStatsService,
+  ) {}
 
   @Post('sets')
   @ApiOperation({
@@ -83,8 +88,8 @@ export class QuizController {
   }
 
   @Get('sets/:id')
-  async findQuizSetById(@Param('id') id: number) {
-    const quizSet = await this.quizService.findQuizSetById(id);
+  async findQuizSetById(@Param('id', ParseIntPipe) id: number) {
+    const quizSet = await this.quizService.findQuizSetBasicInfo(id);
     if (!quizSet) {
       throw new HttpException(
         '해당 ID의 퀴즈 세트를 찾을 수 없습니다',
@@ -92,6 +97,29 @@ export class QuizController {
       );
     }
     return quizSet;
+  }
+
+  @Post('sets/:id/start')
+  @UseGuards(JwtAuthGuard)
+  async startQuizSet(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: Request & { user: { userId: number } },
+  ) {
+    // 카드 정보를 포함한 퀴즈 세트 조회
+    const quizSet = await this.quizService.findQuizSetWithCards(id);
+    if (!quizSet) {
+      throw new HttpException(
+        '해당 ID의 퀴즈 세트를 찾을 수 없습니다',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    // 사용자 학습 시작 처리
+    const userId = req.user.userId;
+    console.log('User ID:', userId);
+    await this.userStatsService.startQuizSet(userId, quizSet.id, quizSet.title);
+
+    return quizSet; // 카드 정보를 포함한 전체 퀴즈 세트 반환
   }
 
   @Put('sets/:id')

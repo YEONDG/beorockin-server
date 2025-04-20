@@ -41,7 +41,7 @@ export class QuizService {
 
     await this.quizCardRepository.save(quizCards);
 
-    const result = await this.findQuizSetById(savedQuizSet.id);
+    const result = await this.findQuizSetBasicInfo(savedQuizSet.id);
     if (!result) {
       throw new Error(
         `생성된 퀴즈 세트를 찾을 수 없습니다. ID: ${savedQuizSet.id}`,
@@ -60,8 +60,15 @@ export class QuizService {
     });
   }
 
-  async findQuizSetById(id: number): Promise<QuizSet | null> {
-    // 문제 카드를 포함한 퀴즈 세트 조회
+  // 기본 정보만 조회 (카드 제외)
+  async findQuizSetBasicInfo(id: number): Promise<QuizSet | null> {
+    return this.quizSetRepository.findOne({
+      where: { id },
+    });
+  }
+
+  // 카드 정보를 포함한 전체 조회
+  async findQuizSetWithCards(id: number): Promise<QuizSet | null> {
     return this.quizSetRepository.findOne({
       where: { id },
       relations: ['cards'],
