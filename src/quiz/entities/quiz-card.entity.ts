@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { QuizSet } from './quiz-set.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -62,5 +63,6 @@ export class QuizCard {
     description: '퀴즈 세트 ID (외래 키)',
   })
   @Column({ name: 'quiz_set_id' })
+  @Index()
   quizSetId: number;
 }

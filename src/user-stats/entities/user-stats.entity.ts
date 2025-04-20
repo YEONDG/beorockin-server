@@ -5,6 +5,8 @@ import {
   Column,
   OneToOne,
   JoinColumn,
+  UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('user_stats')
@@ -13,8 +15,12 @@ export class UserStats {
   id: number;
 
   @OneToOne(() => User)
-  @JoinColumn()
+  @JoinColumn({ name: 'user_id' }) // 컬럼 이름 명시
   user: User;
+
+  @Column({ name: 'user_id' }) // 명시적으로 user_id 컬럼 추가
+  @Index() // 성능 향상을 위한 인덱스 추가
+  userId: number;
 
   @Column({ default: 0 })
   streakDays: number;
@@ -28,6 +34,6 @@ export class UserStats {
   @Column({ name: 'last_study_date', type: 'timestamp', nullable: true })
   lastStudyDate: Date | null;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

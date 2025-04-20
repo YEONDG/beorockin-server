@@ -4,10 +4,12 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 
 @Entity('user_quiz_progress')
+@Index('idx_user_quiz', ['userId', 'quizSetId'])
 export class UserQuizProgress {
   @PrimaryGeneratedColumn()
   id: number;
@@ -15,6 +17,9 @@ export class UserQuizProgress {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({ name: 'user_id' })
+  userId: number;
 
   @Column({ name: 'quiz_set_id' })
   quizSetId: number;
@@ -35,6 +40,12 @@ export class UserQuizProgress {
 
   @Column({ name: 'completed_at', type: 'datetime', nullable: true })
   completedAt: Date | null;
+
+  @Column({ default: 0 })
+  cardsCompleted: number;
+
+  @Column({ default: 0 })
+  totalCards: number;
 
   @Column({
     name: 'quiz_set_name',
