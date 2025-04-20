@@ -9,6 +9,9 @@ import {
   Delete,
   ForbiddenException,
   Req,
+  Patch,
+  BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -29,13 +32,13 @@ export class UserController {
     return this.usersService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  @ApiCookieAuth('access_token')
-  @ApiOperation({ summary: '사용자 목록 조회' })
-  findAll() {
-    return this.usersService.findAll();
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Get()
+  // @ApiCookieAuth('access_token')
+  // @ApiOperation({ summary: '사용자 목록 조회' })
+  // findAll() {
+  //   return this.usersService.findAll();
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
@@ -59,6 +62,40 @@ export class UserController {
       );
     }
     return this.usersService.update(id, updateUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('username')
+  @ApiCookieAuth('access_token')
+  @ApiOperation({ summary: '유저네임 변경' })
+  async updateUsername(
+    @Body('username') username: string,
+    @Req() req: Request & { user: { userId: number } },
+  ) {
+    if (!username || username.trim() === '') {
+      throw new BadRequestException('사용자 이름을 입력해주세요.');
+    }
+
+    try {
+      const userId = req.user.userId;
+      const updatedUser = await this.usersService.updateUsername(
+        userId,
+        username,
+      );
+
+      return {
+        message: '사용자 이름이 성공적으로 변경되었습니다.',
+        username: updatedUser.username,
+      };
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        if (error.code === '23505') {
+          // PostgreSQL 중복 키 에러 코드
+          throw new ConflictException('이미 사용 중인 사용자 이름입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   @UseGuards(JwtAuthGuard)

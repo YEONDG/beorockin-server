@@ -64,19 +64,19 @@ export class UsersService {
   }
 
   // findAll 메서드 - 모든 사용자 목록 조회
-  async findAll() {
-    const users = await this.userRepository.find({
-      select: [
-        'id',
-        'email',
-        'username',
-        'profileImage',
-        'createdAt',
-        'updatedAt',
-      ],
-    });
-    return users;
-  }
+  // async findAll() {
+  //   const users = await this.userRepository.find({
+  //     select: [
+  //       'id',
+  //       'email',
+  //       'username',
+  //       'profileImage',
+  //       'createdAt',
+  //       'updatedAt',
+  //     ],
+  //   });
+  //   return users;
+  // }
 
   // update 메서드 - 사용자 정보 수정
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -108,6 +108,32 @@ export class UsersService {
     });
 
     return updatedUser;
+  }
+
+  async updateUsername(userId: number, username: string): Promise<User> {
+    // 중복 확인 (선택적 - 데이터베이스 제약 조건에 따라 다름)
+    const existingUser = await this.userRepository.findOne({
+      where: { username },
+    });
+
+    if (existingUser && existingUser.id !== userId) {
+      throw new ConflictException('이미 사용 중인 사용자 이름입니다.');
+    }
+
+    // 사용자 찾기
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // 사용자 이름 업데이트
+    user.username = username;
+
+    // 저장 및 반환
+    return this.userRepository.save(user);
   }
 
   // remove 메서드 - 사용자 삭제
