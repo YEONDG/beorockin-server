@@ -124,4 +124,22 @@ export class UserController {
 
     return { imageUrl };
   }
+
+  // 프로필 이미지 defualt 엔드포인트
+  @Patch('profile-image/default')
+  @UseGuards(JwtAuthGuard)
+  async setDefaultProfileImage(
+    @Body() body: { imgUrl: string },
+    @Req() req: Request & { user: { userId: number } },
+  ) {
+    const userId = req.user.userId; // JWT에서 사용자 ID 가져오기
+
+    // 기본 프로필 이미지 URL
+    const defaultImageUrl = body.imgUrl; // 기본 이미지 경로로 변경
+
+    // 서비스를 통해 사용자 프로필 이미지 URL 업데이트
+    await this.usersService.updateProfileImage(userId, defaultImageUrl);
+
+    return { imageUrl: defaultImageUrl };
+  }
 }
