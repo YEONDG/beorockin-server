@@ -12,6 +12,7 @@ import {
   Patch,
   BadRequestException,
   ConflictException,
+  Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -19,7 +20,7 @@ import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserData } from 'src/auth/jwt.strategy';
 
-@ApiTags('users')
+@ApiTags('user')
 @Controller('user')
 export class UserController {
   constructor(private readonly usersService: UsersService) {}
@@ -104,5 +105,23 @@ export class UserController {
   @ApiOperation({ summary: '사용자 삭제' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);
+  }
+
+  // 프로필 이미지 URL 저장 엔드포인트
+  @Post('profile-image/save')
+  @UseGuards(JwtAuthGuard)
+  async saveProfileImage(
+    @Body() body: { imageKey: string; bucketName: string },
+    @Req() req: Request & { user: { userId: number } },
+  ) {
+    const userId = req.user.userId; // JWT에서 사용자 ID 가져오기
+
+    // S3 이미지 URL 생성
+    const imageUrl = `https://${body.bucketName}.s3.amazonaws.com/${body.imageKey}`;
+
+    // 서비스를 통해 사용자 프로필 이미지 URL 업데이트
+    await this.usersService.updateProfileImage(userId, imageUrl);
+
+    return { imageUrl };
   }
 }

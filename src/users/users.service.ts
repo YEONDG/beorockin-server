@@ -136,6 +136,19 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  // 프로필 이미지 URL 업데이트
+  async updateProfileImage(userId: number, imageUrl: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다');
+    }
+
+    user.profileImage = imageUrl;
+
+    return this.userRepository.save(user);
+  }
+
   // remove 메서드 - 사용자 삭제
   async remove(id: number) {
     // 사용자 존재 여부 확인
